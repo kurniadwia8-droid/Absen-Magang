@@ -1,0 +1,339 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Absensi Magenta</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7f5;
+      color: #24352c;
+    }
+    header {
+      background: #008a5b;
+      color: white;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 8px; }
+    header p { margin: 0; }
+    main {
+      max-width: 700px;
+      margin: 28px auto;
+      padding: 0 16px;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 18px #163c2910;
+    }
+    h2 { margin-top: 0; color: #008a5b; }
+    label {
+      display: block;
+      margin: 15px 0 7px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccd8d0;
+      border-radius: 8px;
+      font-size: 16px;
+      background: white;
+    }
+    button {
+      border: 0;
+      border-radius: 9px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #008a5b;
+      color: white;
+    }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .secondary { background: #e5f3eb; color: #08774f; }
+    .danger { background: #9b3b3b; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .hidden { display: none !important; }
+    .clock { font-size: 28px; font-weight: bold; margin: 12px 0; }
+    .muted { color: #64746a; font-size: 14px; }
+    .message { margin-top: 14px; color: #08774f; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    th, td { padding: 10px; border-bottom: 1px solid #e1e8e3; text-align: left; }
+    th { background: #eaf5ee; }
+    footer { text-align: center; color: #64746a; padding: 20px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Absensi Magenta</h1>
+    <p>Sistem Kehadiran Peserta Magang</p>
+  </header>
+
+  <main>
+    <section id="halaman-identitas" class="card">
+      <h2>Identitas Peserta</h2>
+      <p class="muted">Lengkapi identitas sebelum melakukan absensi.</p>
+      <form id="form-identitas">
+        <label for="nama">Nama lengkap</label>
+        <input id="nama" required maxlength="100" placeholder="Masukkan nama lengkap">
+
+        <label for="jenis">Jenis magang</label>
+        <select id="jenis" required>
+          <option value="">Pilih jenis magang</option>
+          <option>Magenta</option>
+          <option>PKL</option>
+          <option>Magang Mandiri</option>
+        </select>
+
+        <label for="departemen">Departemen</label>
+        <select id="departemen" required>
+          <option value="">Pilih departemen</option>
+          <option>Bisnis</option>
+          <option>Operasional</option>
+          <option>Pemasaran</option>
+          <option>Keuangan</option>
+          <option>SDM</option>
+          <option>Umum</option>
+        </select>
+
+        <div class="actions">
+          <button type="submit">Lanjut ke Absensi</button>
+        </div>
+      </form>
+      <p id="pesan-identitas" class="message" role="status"></p>
+    </section>
+
+    <section id="halaman-absensi" class="hidden">
+      <div class="card">
+        <h2>Selamat Datang!</h2>
+        <div id="ringkasan-identitas" class="muted"></div>
+        <div id="jam-sekarang" class="clock">--:--:--</div>
+        <p id="tanggal-sekarang" class="muted"></p>
+      </div>
+
+      <div class="card">
+        <h2>Absensi Hari Ini</h2>
+        <p>Jam masuk: <strong id="jam-masuk">--:--</strong></p>
+        <p>Jam pulang: <strong id="jam-pulang">--:--</strong></p>
+        <div class="actions">
+          <button id="btn-masuk">Absen Masuk</button>
+          <button id="btn-pulang" class="secondary">Absen Pulang</button>
+        </div>
+        <p id="pesan-absensi" class="message" role="status"></p>
+        <div class="actions">
+          <button id="btn-riwayat" class="secondary">Lihat Riwayat</button>
+          <button id="btn-edit-identitas" class="secondary">Ubah Identitas</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="halaman-riwayat" class="card hidden">
+      <h2>Riwayat Absensi</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th><th>Nama</th><th>Jenis</th>
+              <th>Departemen</th><th>Masuk</th><th>Pulang</th>
+            </tr>
+          </thead>
+          <tbody id="isi-riwayat"></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button id="btn-kembali" class="secondary">Kembali</button>
+        <button id="btn-ekspor">Ekspor CSV</button>
+      </div>
+      <p id="pesan-riwayat" class="message" role="status"></p>
+    </section>
+  </main>
+
+  <footer>Absensi Magenta · Sistem Kehadiran Peserta Magang</footer>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const KEY = "absensiMagentaBaru";
+    const IDENTITAS = "identitasMagentaBaru";
+
+    let identitas = null;
+    let dataAbsensi = [];
+
+    function tanggalHariIni() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+
+    function jamSekarang() {
+      return new Date().toLocaleTimeString("id-ID", {
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        hour12: false
+      });
+    }
+
+    function simpanLokal() {
+      localStorage.setItem(KEY, JSON.stringify(dataAbsensi));
+    }
+
+    function tampilkanHalaman(id) {
+      ["halaman-identitas","halaman-absensi","halaman-riwayat"].forEach(n =>
+        $(n).classList.toggle("hidden", n !== id)
+      );
+      window.scrollTo(0, 0);
+    }
+
+    function muatLokal() {
+      try {
+        dataAbsensi = JSON.parse(localStorage.getItem(KEY)) || [];
+        identitas = JSON.parse(localStorage.getItem(IDENTITAS)) || null;
+      } catch {
+        dataAbsensi = [];
+        identitas = null;
+      }
+    }
+
+    function catatanHariIni() {
+      if (!identitas) return null;
+      return dataAbsensi.find(d =>
+        d.tanggal === tanggalHariIni() &&
+        d.nama.toLowerCase() === identitas.nama.toLowerCase() &&
+        d.jenis === identitas.jenis &&
+        d.departemen === identitas.departemen
+      ) || null;
+    }
+
+    function perbaruiTampilan() {
+      $("jam-sekarang").textContent = jamSekarang();
+      $("tanggal-sekarang").textContent = new Date().toLocaleDateString("id-ID", {
+        weekday:"long", day:"numeric", month:"long", year:"numeric"
+      });
+
+      if (!identitas) return;
+
+      $("ringkasan-identitas").textContent =
+        `${identitas.nama} · ${identitas.jenis} · ${identitas.departemen}`;
+
+      const catatan = catatanHariIni();
+      $("jam-masuk").textContent = catatan?.masuk || "--:--";
+      $("jam-pulang").textContent = catatan?.pulang || "--:--";
+      $("btn-masuk").disabled = Boolean(catatan?.masuk);
+      $("btn-pulang").disabled = !catatan?.masuk || Boolean(catatan?.pulang);
+    }
+
+    $("form-identitas").addEventListener("submit", event => {
+      event.preventDefault();
+      identitas = {
+        nama: $("nama").value.trim(),
+        jenis: $("jenis").value,
+        departemen: $("departemen").value
+      };
+      localStorage.setItem(IDENTITAS, JSON.stringify(identitas));
+      perbaruiTampilan();
+      $("pesan-identitas").textContent = "";
+      $("pesan-absensi").textContent = "";
+      tampilkanHalaman("halaman-absensi");
+    });
+
+    function catat(jenis) {
+      const catatan = catatanHariIni();
+
+      if (jenis === "pulang" && !catatan?.masuk) {
+        $("pesan-absensi").textContent = "Silakan absen masuk terlebih dahulu.";
+        return;
+      }
+
+      if (jenis === "masuk" && catatan?.masuk) return;
+      if (jenis === "pulang" && catatan?.pulang) return;
+
+      const waktu = jamSekarang();
+
+      if (!catatan) {
+        dataAbsensi.push({
+          ...identitas,
+          tanggal: tanggalHariIni(),
+          masuk: jenis === "masuk" ? waktu : "",
+          pulang: jenis === "pulang" ? waktu : ""
+        });
+      } else {
+        catatan[jenis] = waktu;
+      }
+
+      simpanLokal();
+      perbaruiTampilan();
+      $("pesan-absensi").textContent =
+        `Absensi ${jenis} tercatat di browser ini.`;
+    }
+
+    $("btn-masuk").addEventListener("click", () => catat("masuk"));
+    $("btn-pulang").addEventListener("click", () => catat("pulang"));
+
+    $("btn-edit-identitas").addEventListener("click", () => {
+      $("nama").value = identitas?.nama || "";
+      $("jenis").value = identitas?.jenis || "";
+      $("departemen").value = identitas?.departemen || "";
+      tampilkanHalaman("halaman-identitas");
+    });
+
+    $("btn-riwayat").addEventListener("click", () => {
+      const tbody = $("isi-riwayat");
+      tbody.replaceChildren();
+
+      [...dataAbsensi].sort((a,b) => b.tanggal.localeCompare(a.tanggal)).forEach(d => {
+        const tr = document.createElement("tr");
+        [d.tanggal,d.nama,d.jenis,d.departemen,d.masuk || "-",d.pulang || "-"].forEach(v => {
+          const td = document.createElement("td");
+          td.textContent = v;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+
+      $("pesan-riwayat").textContent = dataAbsensi.length
+        ? "" : "Belum ada riwayat absensi di browser ini.";
+      tampilkanHalaman("halaman-riwayat");
+    });
+
+    $("btn-kembali").addEventListener("click", () => {
+      perbaruiTampilan();
+      tampilkanHalaman("halaman-absensi");
+    });
+
+    $("btn-ekspor").addEventListener("click", () => {
+      const kolom = ["Tanggal","Nama","Jenis Magang","Departemen","Masuk","Pulang"];
+      const aman = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
+      const baris = dataAbsensi.map(d =>
+        [d.tanggal,d.nama,d.jenis,d.departemen,d.masuk,d.pulang]
+      );
+      const isi = [kolom, ...baris].map(r => r.map(aman).join(";")).join("\r\n");
+      const blob = new Blob(["\uFEFF" + isi], {type:"text/csv;charset=utf-8;"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "riwayat-absensi-magenta.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    muatLokal();
+    if (identitas) {
+      $("nama").value = identitas.nama;
+      $("jenis").value = identitas.jenis;
+      $("departemen").value = identitas.departemen;
+      perbaruiTampilan();
+      tampilkanHalaman("halaman-absensi");
+    } else {
+      tampilkanHalaman("halaman-identitas");
+    }
+
+    setInterval(perbaruiTampilan, 1000);
+  </script>
+</body>
+</html>
